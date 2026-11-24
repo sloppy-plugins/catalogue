@@ -1,0 +1,7 @@
+{
+  "catalogue_version": 1,
+  "type": "sloppy.plugin-catalogue",
+  "name": "Sloppy Plugin Catalogue",
+  "description": "Public plugins for Sloppy.",
+  "plugins": []
+}

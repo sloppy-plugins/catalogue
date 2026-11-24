@@ -1,0 +1,49 @@
+name: Update catalogue
+
+on:
+  schedule:
+    - cron: "23 * * * *"
+  workflow_dispatch:
+  repository_dispatch:
+    types: [plugin-updated]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: catalogue-update
+  cancel-in-progress: false
+
+jobs:
+  update:
+    if: github.repository == 'sloppy-plugins/catalogue'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v7.1.0
+        with:
+          python-version: "3.14"
+      - run: make deps check PYTHON=python
+      - name: Discover versions from configured locations
+        run: python scripts/discover.py --destination "$RUNNER_TEMP/plugins" --report "$RUNNER_TEMP/discovered-versions.json"
+      - uses: actions/upload-artifact@v7.0.2
+        with:
+          name: discovered-versions
+          path: ${{ runner.temp }}/discovered-versions.json
+      - name: Validate and add new versions
+        run: make sync PLUGIN_ROOT="$RUNNER_TEMP/plugins"
+      - name: Open or update catalogue pull request
+        uses: peter-evans/create-pull-request@v8.1.3
+        with:
+          branch: automation/plugin-releases
+          commit-message: Add public plugin releases
+          title: Add public plugin releases
+          body: Public plugin manifests and pushed commits validated by the catalogue tools. Existing releases are preserved.
+          add-paths: catalogue.json
+          delete-branch: true
