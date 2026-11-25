@@ -3,13 +3,13 @@
 Add `https://github.com/sloppy-plugins/catalogue` in **Sloppy Settings → Plugins → Add Catalogue…**, then refresh and browse available plugins.
 
 This repository is standalone. Its `catalogue.json` lists public plugin repositories,
-exact release commits and complete version-specific manifests. The `catalogue.public.json` seed is empty; public releases are added only after
-plugin commits have been published on GitHub and synchronized.
+exact Git commits or registry archives with SHA-256 hashes, and complete version-specific manifests. The `catalogue.public.json` seed is empty; public releases are added only after
+plugin releases have been published to their configured Git, npm or PyPI source.
 It never advertises a release with a placeholder or unpublished commit.
 
 ## Maintain releases
 
-Requirements: Python 3.11+, Git, Make and the public `sloppy-sdk` package. Publish
+Requirements: Python 3.11+, Git, Make and the public `sloppy-sdk==0.1.2` package. Publish
 the SDK on PyPI before installing the catalogue's default tooling dependencies.
 
 ```sh
@@ -30,9 +30,11 @@ git diff -- catalogue.json
 # Review, commit and push the catalogue yourself.
 ```
 
-Synchronization selects Git repositories from `sources.json`, verifies
-clean working trees and fresh GitHub `origin/main` commits, then adds their current
-versions using the SDK's catalogue validator. It validates every candidate before
+Synchronization selects the locations in `sources.json`. Git sources verify
+clean working trees and fresh GitHub `origin/main` commits. Registry sources
+read the published archives without running plugin code, verify registry integrity,
+extract the inline manifest and pin the archive URL and SHA-256. Both use the SDK's
+catalogue validator. It validates every candidate before
 writing the catalogue atomically. It never commits, stages, or pushes changes.
 A known version retains its original commit even when its branch advances. Changing
 a published manifest without a version bump is rejected. Existing releases remain unchanged.
@@ -69,11 +71,20 @@ The workflow opens or updates one PR containing validated catalogue changes.
 It never runs plugin code or dependency initialization. Enable **Allow GitHub Actions
 to create and approve pull requests** in repository Actions settings to permit PR creation.
 
-Registry discovery records npm versions, distribution metadata and dist-tags, and
-PyPI versions, download URLs, SHA-256 hashes and yanked status in the workflow's
-`discovered-versions` artifact. Package installation is a separate future change:
-registry discoveries are not advertised as Git-installable releases. All current
-locations use Git, and only public releases belong in this catalogue.
+The current public plugins use npm (`@sloppy-plugins/codex` and
+`@sloppy-plugins/copilot`) and PyPI (`sloppy-testing`). Stable non-deprecated npm
+versions and non-yanked PyPI distributions are eligible. Universal Python wheels
+are preferred, with source archives as a fallback. The archive must contain one
+plugin manifest matching the registry package/project identity and version.
+Unsafe paths, links, ambiguous manifests, hash mismatches and attempts to change
+an existing release fail the entire update without publishing partial results.
+The discovery artifact retains the full registry inventory, including prereleases
+and yanked status. Sloppy installs the pinned archives into private plugin storage,
+checks the actual manifest, and performs the manifest's declared initialization.
+
+Publish SDK 0.1.2 before enabling this workflow, since its catalogue validators add
+registry source support. For local validation before publication, use the
+standalone SDK source override described above.
 
 Discovery can also be run locally with Python and Git:
 

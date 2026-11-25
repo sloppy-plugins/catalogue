@@ -44,6 +44,6 @@ jobs:
           branch: automation/plugin-releases
           commit-message: Add public plugin releases
           title: Add public plugin releases
-          body: Public plugin manifests and pushed commits validated by the catalogue tools. Existing releases are preserved.
+          body: Public Git commits and registry archives verified by the catalogue tools. Package hashes and existing releases are preserved.
           add-paths: catalogue.json
           delete-branch: true

@@ -2,16 +2,16 @@
   "sources_version": 1,
   "plugins": {
     "codex": {
-      "kind": "git",
-      "repository": "https://github.com/sloppy-plugins/codex.git"
+      "kind": "npm",
+      "package": "@sloppy-plugins/codex"
     },
     "copilot": {
-      "kind": "git",
-      "repository": "https://github.com/sloppy-plugins/copilot.git"
+      "kind": "npm",
+      "package": "@sloppy-plugins/copilot"
     },
     "testing": {
-      "kind": "git",
-      "repository": "https://github.com/sloppy-plugins/testing.git"
+      "kind": "pypi",
+      "project": "sloppy-testing"
     }
   }
 }

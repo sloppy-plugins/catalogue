@@ -113,9 +113,7 @@ def checkout(sources, destination):
                 "location": source,
                 **registry_versions(source),
             }
-            print(
-                f"{name}: discovered package versions; package installation is not yet supported"
-            )
+            print(f"{name}: discovered registry package versions")
             continue
         repo = destination / name
         subprocess.run(

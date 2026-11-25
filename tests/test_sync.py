@@ -1,9 +1,13 @@
 import importlib.util
 import json
 import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 from sloppy_sdk.catalogue import read, write
 
@@ -114,7 +118,8 @@ class SyncTests(unittest.TestCase):
             },
             "future": {"kind": "npm", "package": "@example/future"},
         }
-        sync.synchronize(self.plugins, self.catalogue, sources=sources)
+        with patch("packages.merge", side_effect=lambda catalogue, *_: catalogue):
+            sync.synchronize(self.plugins, self.catalogue, sources=sources)
         self.assertEqual(
             [p["id"] for p in read(self.catalogue)["plugins"]], ["example"]
         )
@@ -134,13 +139,14 @@ class SyncTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "configured location"):
             sync.synchronize(self.plugins, self.catalogue, sources=sources)
 
-    def test_registry_only_sources_do_not_create_installable_git_releases(self):
+    def test_registry_only_sources_delegate_without_git_checkout_requirements(self):
         before = self.catalogue.read_bytes()
-        sync.synchronize(
-            self.plugins,
-            self.catalogue,
-            sources={"future": {"kind": "pypi", "project": "future"}},
-        )
+        with patch("packages.merge", side_effect=lambda catalogue, *_: catalogue):
+            sync.synchronize(
+                self.plugins,
+                self.catalogue,
+                sources={"future": {"kind": "pypi", "project": "future"}},
+            )
         self.assertEqual(self.catalogue.read_bytes(), before)
 
     def test_published_tags_recover_versions_between_polls(self):

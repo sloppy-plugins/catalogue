@@ -171,6 +171,26 @@ def synchronize(plugins_dir, catalogue_file, check_only=False, sources=None):
         raise ValueError(
             "The catalogue changed during synchronization; rerun without concurrent edits"
         )
+    if sources is not None:
+        from discover import request_json
+        from packages import merge
+
+        previous = catalogue
+        catalogue = merge(catalogue, sources, request_json)
+        if catalogue != previous:
+            old_keys = {
+                (p["id"], r["version"])
+                for p in previous["plugins"]
+                for r in p["versions"]
+            }
+            added.extend(
+                f"{p['id']}@{r['version']}"
+                for p in catalogue["plugins"]
+                for r in p["versions"]
+                if (p["id"], r["version"]) not in old_keys
+            )
+    if catalogue_file.read_bytes() != original:
+        raise ValueError("The catalogue changed during synchronization")
     if check_only:
         print(
             f"Validation passed: {len(added)} releases would be added; no files changed."

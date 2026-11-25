@@ -19,17 +19,18 @@ help: ## List catalogue commands
 
 deps: ## Install the public SDK catalogue tools (or select a standalone SDK checkout)
 	$(PYTHON) -m venv "$(CURDIR)/.venv"
-	"$(PY)" -m pip install --index-url "$(PYPI_INDEX)" "$(if $(SDK_SOURCE),$(SDK_SOURCE),sloppy-sdk==0.1.0)"
+	"$(PY)" -W default -m pip install --index-url "$(PYPI_INDEX)" --upgrade pip
+	"$(PY)" -m pip install --index-url "$(PYPI_INDEX)" "$(if $(SDK_SOURCE),$(SDK_SOURCE),sloppy-sdk==0.1.2)"
 
 validate: ## Validate the catalogue format and every embedded manifest
 	"$(PY)" -m sloppy_sdk.catalogue validate catalogue.json
 	"$(PY)" -m sloppy_sdk.catalogue validate catalogue.public.json
 	"$(PY)" -c 'from pathlib import Path; import sys; sys.path.insert(0, "scripts"); from discover import load_sources; load_sources(Path("sources.json"))'
 
-sync: ## Add releases from clean sibling plugin commits already pushed to GitHub
+sync: ## Add verified Git, npm, and PyPI releases from configured sources
 	"$(PY)" scripts/sync-releases.py --plugins-dir "$(PLUGIN_ROOT)"
 
-sync-check: ## Check pushed plugin commits without updating the catalogue
+sync-check: ## Check configured releases without updating the catalogue
 	"$(PY)" scripts/sync-releases.py --plugins-dir "$(PLUGIN_ROOT)" --check
 
 test: ## Check synchronization using isolated local remotes
